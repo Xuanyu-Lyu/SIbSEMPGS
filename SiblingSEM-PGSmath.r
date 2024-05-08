@@ -1,6 +1,8 @@
 # The script is designed for using iterative math to check the algebraic expectations of the covariances
 
-load("results.rdata")
+load("results100.rdata")
+
+cor(results[[1]])
 library(data.table)  
 
 # Assuming results is your list of dataframes
@@ -46,5 +48,10 @@ VY = mean(c(ObservedCovs[1,1],
             ObservedCovs[4,4]))
 mu = ObservedCovs[3,4]/VY^2
 VF = 2 * f^2 * VY * (1 + VY * mu)
-covY1Y2_expect = 2*delta*w + 2*(delta^2)*g + delta^2*k + VF
+covY1Y2_expect = 2*delta*w + 4*(delta^2)*g + delta^2*k + VF
 covY1Y2_observed = ObservedCovs[1,2]
+
+
+#save the observed covariance table into a csv file, round to 3 decimal places
+write.csv(round(mean_cov,3), "ObservedCovs.csv", row.names = TRUE)
+

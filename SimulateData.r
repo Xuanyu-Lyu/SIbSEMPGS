@@ -1,6 +1,6 @@
 source("SIMULATE_DAT_GEN.R")
 
-num.cvs = 500
+num.cvs = 200
 
 RUN.MARKERS <- FALSE #whether to only consider GRMs built from CVs (FALSE) or both CVs and SNPs (TRUE)
 
@@ -18,7 +18,7 @@ data_list <- AM.SIMULATE(
     CV.INFO = CV.INFO, 
     H2.T0 = .49, 
     NUM.GENERATIONS = 20, 
-    POP.SIZE = 20000, 
+    POP.SIZE = 10000, 
     MATE.COR = .3, 
     AVOID.INB = TRUE, 
     SAVE.EACH.GEN = TRUE, 
@@ -26,10 +26,10 @@ data_list <- AM.SIMULATE(
     SEED = 62, 
     VF.T0 = .08, 
     PROP.H2.LATENT = 0, 
-    Unequal_AM = TRUE)
+    Unequal_AM = FALSE)
 
 data_df <- data_list$HISTORY$PHEN[[11]] |> as.data.frame()
-
+cor(data_df)
 
 all_dadID <- unique(data_df[,2])
 all_trios <- data.frame(matrix(ncol = ncol(data_df), nrow = 0))
@@ -91,7 +91,7 @@ for(k in 1:100){
         SEED = k, 
         VF.T0 = .08, 
         PROP.H2.LATENT = 0, 
-        Unequal_AM = TRUE)
+        Unequal_AM = FALSE)
 
     data_df <- data_list$HISTORY$PHEN[[11]] |> as.data.frame()
     
@@ -138,4 +138,4 @@ for(k in 1:100){
 
 }
     # write the list into a rdata file
-    save(results, file = "results.rdata")
+    save(results, file = "results100.rdata")
