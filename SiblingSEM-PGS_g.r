@@ -14,15 +14,15 @@ library(stringr)
     mxOption(NULL,"Default optimizer","NPSOL")
 
 # Load the simulated data for this demonstration:
-    Example_Data  <- fread("Example_Data.txt", header = T)
+    Example_Data  <- fread("/Users/xuly4739/Library/CloudStorage/OneDrive-UCB-O365/Documents/coding/R-projects/SibSEMPGS/Example_Data.txt", header = T)
 #    str(Example_Data)
- cov(Example_Data, use="pairwise.complete.obs")
+    cov(Example_Data, use="pairwise.complete.obs")
 # Create variables-- For some, we will also input their algebraic expectations, which we can obtain from path tracing
     # Variance Components:
 
-    VY    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=0, label="VY1", name="VY") # Phenotypic variance
-	VF    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=0, label="VF1", name="VF") # Variance due to VT
-    VE    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=0, label="VE1", name="VE") # Residual variance
+    VY    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=3, label="VY1", name="VY") # Phenotypic variance
+	VF    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=.1, label="VF1", name="VF") # Variance due to VT
+    VE    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=.2, label="VE1", name="VE") # Residual variance
 
     VY_Algebra <- mxAlgebra(2 * Omega * delta + delta * w + VF + VE, name="VY_Algebra")
     VF_Algebra <- mxAlgebra(2 * f^2 * VY * (1 + VY * mu),            name="VF_Algebra")
@@ -33,10 +33,11 @@ library(stringr)
     Omega <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=.3, label="Omega1",name="Omega") # Within-person PGS-Phen covariance
 
     Omega_Algebra <- mxAlgebra(2 * delta * g + delta * k + .5 * w, name="Omega_Algebra") # E.g., cov(Yp, NTp)
+    Omega_Constraint <- mxConstraint(Omega == Omega_Algebra, name='Omega_Constraint')
 
     # Assortative mating effects:
     mu    <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=.4, label="mu1", name="mu") # AM co-path coefficient
-    g     <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=.05, label="g1",  name="g")  # Increase in cross-mate PGS (co)variances from AM
+    g     <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=1, label="g1",  name="g")  # Increase in cross-mate PGS (co)variances from AM
 
     # Vertical transmission effects (note that VF above is also due to VT):
     f     <- mxMatrix(type="Full", nrow=1, ncol=1, free=T, values=0, label="f1",  name="f") # Vertical Transmission effect
@@ -45,7 +46,6 @@ library(stringr)
 # Set the variables created above to be equal to their algebraic constraints:
     VY_Constraint    <- mxConstraint(VY == VY_Algebra,       name='VY_Constraint')
     VF_Constraint    <- mxConstraint(VF == VF_Algebra,       name='VF_Constraint')
-	Omega_Constraint <- mxConstraint(Omega == Omega_Algebra, name='Omega_Constraint')
     Phen_Homog <- mxConstraint(g == Omega^2 * mu,  name="Phen_Homog")
 
 # Provide the algebraic expectations for the covariances between relatives:
@@ -114,12 +114,12 @@ library(stringr)
     Example_Data_Mx <- mxData(observed=Example_Data, type="raw" )
 
 # Create fit function:
-    FitFunctionML <- mxFitFunctionML()
+    FitFunctionML <- mxFitFunctionWLS(type = "DWLS", allContinuousMethod='marginals')
 
 # Specify what parameters we're going to be including in our model:
 Params <- list( VY, VY_Algebra, VY_Constraint, VF, VF_Algebra, VF_Constraint, VE,  # Variance Components
                 Omega, Omega_Algebra, Omega_Constraint, delta, k,                    # Genetic Effects
-                mu, g,                                                              # AM Effects
+                mu, g, Phen_Homog,                                                     # AM Effects
                 f, w,                                                                # VT Effects
                 Yo1_Yp, Yo1_Ym, Yo1_Tp1, Yo1_Tm1, Yo1_NTp1, Yo1_NTm1, Yo1_Tp2, Yo1_Tm2, Yo1_NTp2, Yo1_NTm2, # Relative Covariances for Offspring 1
                 Yo2_Yp, Yo2_Ym, Yo2_Tp1, Yo2_Tm1, Yo2_NTp1, Yo2_NTm1, Yo2_Tp2, Yo2_Tm2, Yo2_NTp2, Yo2_NTm2, # Relative Covariances for Offspring 2
@@ -134,4 +134,25 @@ Params <- list( VY, VY_Algebra, VY_Constraint, VF, VF_Algebra, VF_Constraint, VE
 
 #source('http://openmx.ssri.psu.edu/getOpenMx.R')
 
-cov(Example_Data, use="pairwise.complete.obs")
+summary(fitModel1)
+
+# cov(Example_Data, use="pairwise.complete.obs")
+
+
+
+# covariance =  matrix(c(    # 12x12
+#  0.1, 0.26192, 0.1352, 0.1352, 0.2712, 0.0712, 0.2712, 0.0712, 0.1712, 0.1712, 0.1712, 0.1712
+# , 0.26192, 0.1, 0.1352, 0.1352, 0.1712, 0.1712, 0.1712, 0.1712, 0.2712, 0.0712, 0.2712, 0.0712
+# , 0.1352, 0.1352, 0.1, 0.004, 0.3, 0.3, 0.012, 0.012, 0.3, 0.3, 0.012, 0.012
+# , 0.1352, 0.1352, 0.004, 0.1, 0.012, 0.012, 0.3, 0.3, 0.012, 0.012, 0.3, 0.3
+# , 0.2712, 0.1712, 0.3, 0.012, 0.55, 0.05, 0.05, 0.05, 0.3, 0.3, 0.05, 0.05
+# , 0.0712, 0.1712, 0.3, 0.012, 0.05, 0.55, 0.05, 0.05, 0.3, 0.3, 0.05, 0.05
+# , 0.2712, 0.1712, 0.012, 0.3, 0.05, 0.05, 0.55, 0.05, 0.05, 0.05, 0.3, 0.3
+# , 0.0712, 0.1712, 0.012, 0.3, 0.05, 0.05, 0.05, 0.55, 0.05, 0.05, 0.3, 0.3
+# , 0.1712, 0.2712, 0.3, 0.012, 0.3, 0.3, 0.05, 0.05, 0.55, 0.05, 0.05, 0.05
+# , 0.1712, 0.0712, 0.3, 0.012, 0.3, 0.3, 0.05, 0.05, 0.05, 0.55, 0.05, 0.05
+# , 0.1712, 0.2712, 0.012, 0.3, 0.05, 0.05, 0.3, 0.3, 0.05, 0.05, 0.55, 0.05
+# , 0.1712, 0.0712, 0.012, 0.3, 0.05, 0.05, 0.3, 0.3, 0.05, 0.05, 0.05, 0.55), byrow=TRUE, nrow=12, ncol=12)
+
+# eigen(covariance)$values
+# eigen(mxGetExpected(Model1, "covariance"))$values

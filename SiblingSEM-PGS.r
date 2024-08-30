@@ -51,7 +51,7 @@ library(stringr)
 
 # Provide the algebraic expectations for the covariances between relatives:
     # Covariances between the offspring 1 phenotype and offspring 2 phenotype:
-    Yo1_Yo2 <- mxAlgebra(2 * delta * w + 2 * delta^2 * gt + delta^2 * k + VF, name="Yo1_Yo2")
+    Yo1_Yo2 <- mxAlgebra(2 * delta * w + 4 * delta^2 * gt + delta^2 * k + VF, name="Yo1_Yo2")
     # Covariances between the offspring 1 phenotype and parental PGS's:
     Yo1_NTp1 <- mxAlgebra(2 * delta * gt + .5 * w, name="Yo1_NTp1")
     Yo1_NTm1 <- mxAlgebra(2 * delta * gt + .5 * w, name="Yo1_NTm1")
