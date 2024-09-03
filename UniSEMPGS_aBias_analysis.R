@@ -37,26 +37,44 @@ v_r2pgs_biased <- matrix(c(c(.025,.01,.04,.2),
                                c(.05,.025,.075,.2),
                                c(.1,.05,.15,.2)), ncol = 4, byrow = TRUE)
 v_a_biased <- apply(v_r2pgs_biased, c(1,2), getAfromR2pgs, h2 = .49)
+v_a_biased <- matrix(c(seq(.50, .80, by = 0.02)))
 l_r2pgs_fitsum <- list()
 
-v_a
 
-for (i in 1:length(v_r2pgs)){
+# for matrix starting data
+# for (i in 1:length(v_r2pgs)){
+#     l_r2pgs_fitsum[[as.character(v_r2pgs[i])]] <- list()
+#     load(paste0("r2pgs", v_r2pgs[i],"results_biasA100.rdata"))
+#     for(j in 1:length(v_r2pgs_biased[i,])){
+#         l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_r2pgs_biased[i,j])]] <- list()
+#         for(k in 1:100){
+#         data_df <- results[[k]]
+#         data_df <- data_df[,c("NTMO","TMO","NTPO","TPO","YM","YP","Y")]
+#         colnames(data_df) <- c("NTm","Tm","NTp","Tp","Ym","Yp","Yo")
+#         l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_r2pgs_biased[i,j])]][[k]] <- fitDifferentA(data_df, a = v_a_biased[i,j] , max.cores = 2)[,-1]
+#         cat("r2pgs =", v_r2pgs[i],"biased r2pgs =",v_a_biased[i,j], "data", k, " completed\n")
+#         }
+#     }
+   
+# }
+# for the continuous from .60 to .80
+for (i in 2){
     l_r2pgs_fitsum[[as.character(v_r2pgs[i])]] <- list()
     load(paste0("r2pgs", v_r2pgs[i],"results_biasA100.rdata"))
-    for(j in 1:length(v_r2pgs_biased[i,])){
-        l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_r2pgs_biased[i,j])]] <- list()
+    for(j in 1:length(v_a_biased)){
+        l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_a_biased[[j]])]] <- list()
         for(k in 1:100){
         data_df <- results[[k]]
         data_df <- data_df[,c("NTMO","TMO","NTPO","TPO","YM","YP","Y")]
         colnames(data_df) <- c("NTm","Tm","NTp","Tp","Ym","Yp","Yo")
-        l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_r2pgs_biased[i,j])]][[k]] <- fitDifferentA(data_df, a = v_a_biased[i,j] , max.cores = 2)[,-1]
-        cat("r2pgs =", v_r2pgs[i],"biased r2pgs =",v_a_biased[i,j], "data", k, " completed\n")
+        l_r2pgs_fitsum[[as.character(v_r2pgs[i])]][[as.character(v_a_biased[[j]])]][[k]] <- fitDifferentA(data_df, a = v_a_biased[j] , max.cores = 2)[,-1]
+        cat("a =", v_a[i],"biased a =",v_a_biased[j], "data", k, " completed\n")
         }
     }
    
 }
-save(l_r2pgs_fitsum, file = "l_r2pgs_fitsum.rdata")
+
+save(l_r2pgs_fitsum, file = "l_r2pgs_fitsum_cont.rdata")
 
 # Analyze the results
 # load the results
@@ -82,7 +100,41 @@ extractParam <- function(List, param){
 #VF 0.1792068
 
 
+# make a line figure of different level of a bias on the estimate of VF
+load("l_r2pgs_fitsum_cont.rdata")
+df_VF <- data.frame()
+for (i in 1:length((seq(.50, .80, by = 0.02)))){
+    cname <- paste0("a", round((seq(.50, .80, by = 0.02))[i],2))
+    if(i == 1){
+        df_VF <- data.frame(extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "VF"))
+        colnames(df_VF) <- cname
+    } else {
+        df_VF <- cbind(df_VF, extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "VF"))
+        colnames(df_VF)[i] <- cname
+    }
+    
+}
+
+library(ggplot2)
+# Create the plot
+# Reshape df_VF to long format
+df_long_VF <- tidyr::pivot_longer(df_VF, cols = everything(), names_to = "Level_a", values_to = "Value")
+
+true_values <- 0.1792068
+
+# Create the box plot
+g_boxplot <- ggplot(df_long_VF, aes(x = Level_a, y = Value)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = true_values), color = "red") +
+  annotate("text", x = 7, y = .04, label = "Simulated a=0.663", color = "blue", size = 6, hjust = 0) +
+  labs(title = "Box Plot of VF Estimates at Different Levels of a",
+       x = "Level of a",
+       y = "VF Estimate")
+g_boxplot
+ggsave("VF_cont.png", g_boxplot, width = 8, height = 8, type = "cairo-png", dpi = 400)
+
 # make figure for the VF parameter
+
 # Create column names
 col_names <- c(paste0("r2pgs_bias", round(v_r2pgs_biased[1,2],2)),
                paste0("r2pgs_bias", round(v_r2pgs_biased[1,3],2)),

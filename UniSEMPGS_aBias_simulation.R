@@ -8,7 +8,7 @@
 #   2) level of bias r2pgs: .05- .025/.05/.075/.2
 #   3) level of bias r2pgs: .1- .05/.15/.2
 # 3. make plots: x-axis: level of bias r2pgs, y-axis: estimates of the targeted parameters
-
+# 4. make plots: vary a from .5 to .8 in .1 increments and draft the plots
 # Dinka's bd: 09/10
 
 
