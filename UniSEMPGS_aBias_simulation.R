@@ -78,7 +78,7 @@ for (i in 1:length(v_r2pgs)){
 
     a_true <- sqrt(.49*.7)
     # write the list into a rdata file
-    
+    sqrt(.49*.3)
 
 
 

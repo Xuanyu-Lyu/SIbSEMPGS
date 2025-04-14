@@ -74,7 +74,7 @@ for (i in 2){
    
 }
 
-save(l_r2pgs_fitsum, file = "l_r2pgs_fitsum_cont.rdata")
+#save(l_r2pgs_fitsum, file = "l_r2pgs_fitsum_cont.rdata")
 
 # Analyze the results
 # load the results
@@ -98,7 +98,7 @@ extractParam <- function(List, param){
 #w 0.1669394
 #v 0.2550041
 #VF 0.1792068
-
+library(ggplot2)
 
 # make a line figure of different level of a bias on the estimate of VF
 load("l_r2pgs_fitsum_cont.rdata")
@@ -115,7 +115,6 @@ for (i in 1:length((seq(.50, .80, by = 0.02)))){
     
 }
 
-library(ggplot2)
 # Create the plot
 # Reshape df_VF to long format
 df_long_VF <- tidyr::pivot_longer(df_VF, cols = everything(), names_to = "Level_a", values_to = "Value")
@@ -132,6 +131,76 @@ g_boxplot <- ggplot(df_long_VF, aes(x = Level_a, y = Value)) +
        y = "VF Estimate")
 g_boxplot
 ggsave("VF_cont.png", g_boxplot, width = 8, height = 8, type = "cairo-png", dpi = 400)
+
+
+# make a line figure of different level of a bias on the estimate of f
+df_f <- data.frame()
+for (i in 1:length((seq(.50, .80, by = 0.02)))){
+    cname <- paste0("a", round((seq(.50, .80, by = 0.02))[i],2))
+    if(i == 1){
+        df_f <- data.frame(extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "f"))
+        colnames(df_f) <- cname
+    } else {
+        df_f <- cbind(df_f, extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "f"))
+        colnames(df_f)[i] <- cname
+    }
+    
+}
+
+# Create the plot
+# Reshape df_f to long format
+df_long_f <- tidyr::pivot_longer(df_f, cols = everything(), names_to = "Level_a", values_to = "Value")
+
+true_values <- 0.2
+
+# Create the box plot
+g_boxplot <- ggplot(df_long_f, aes(x = Level_a, y = Value)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = true_values), color = "red") +
+  annotate("text", x = 7, y = .04, label = "Simulated a=0.663", color = "blue", size = 6, hjust = 0) +
+  labs(title = "Box Plot of f Estimates at Different Levels of a",
+       x = "Level of a",
+       y = "f Estimate")
+g_boxplot
+ggsave("f_cont.png", g_boxplot, width = 8, height = 8, type = "cairo-png", dpi = 400)
+
+# make a line figure of different level of a bias on the estimate of deltaest
+df_delta <- data.frame()
+
+for (i in 1:length((seq(.50, .80, by = 0.02)))){
+    cname <- paste0("a", round((seq(.50, .80, by = 0.02))[i],2))
+    if(i == 1){
+        df_delta <- data.frame(extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "deltaest"))
+        colnames(df_delta) <- cname
+    } else {
+        df_delta <- cbind(df_delta, extractParam(l_r2pgs_fitsum[[as.character(v_r2pgs[2])]][[as.character(v_a_biased[[i]])]], "deltaest"))
+        colnames(df_delta)[i] <- cname
+    }
+    
+}
+
+# Create the plot
+# Reshape df_delta to long format
+
+df_long_delta <- tidyr::pivot_longer(df_delta, cols = everything(), names_to = "Level_a", values_to = "Value")
+
+true_values <- sqrt(.05)
+
+# Create the box plot
+g_boxplot <- ggplot(df_long_delta, aes(x = Level_a, y = Value)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = true_values), color = "red") +
+  annotate("text", x = 7, y = .04, label = "Simulated a=0.663", color = "blue", size = 6, hjust = 0) +
+  labs(title = "Box Plot of deltaest Estimates at Different Levels of a",
+       x = "Level of a",
+       y = "deltaest Estimate")
+g_boxplot
+ggsave("delta_cont.png", g_boxplot, width = 8, height = 8, type = "cairo-png", dpi = 400)
+
+
+
+
+
 
 # make figure for the VF parameter
 
